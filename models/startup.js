@@ -34,7 +34,7 @@ const startupSchema = mongoose.Schema({
 },
 {
   timestamps: true,
-  conllection : "startups"
+  collection : "startups"
 });
 startupSchema.pre('save', async function (next) {
   const startup = this;

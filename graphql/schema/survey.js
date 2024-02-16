@@ -85,17 +85,20 @@ export const surveyGQLSchema = gql`
         feedbacks: feedbacks
         createdAt: Date
         eta : Int
+        rating : Int
     }
 
     type Query {
         surveys: [Survey]
         survey(id: String): Survey
         surveysByStartup(startup: String): [Survey]
+        surveyReview(id: ID!): Int
     }
 
     type Mutation {
         createSurvey(survey: surveyInput): Survey
         updateSurvey(survey: surveyInputUpdate,id : ID): Survey
         deleteSurvey(id: ID): deleteResponse
+        addResponse(surveyId: ID, question: String, response: responseInput): Survey
     }
 `

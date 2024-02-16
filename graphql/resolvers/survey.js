@@ -1,4 +1,5 @@
 import survey from "../../models/survey.js";
+import weightDist from "../../utils/weightDist.js";
 
 export const surveyResolvers = {
   Query: {
@@ -15,6 +16,7 @@ export const surveyResolvers = {
               video: 1,
               feedbacks: 1,
               fillers: 1,
+              questions: 1,
             },
           },
           {
@@ -41,7 +43,7 @@ export const surveyResolvers = {
     survey: async (_, { id }) => {
       try {
         const surveys = await survey.aggregate([
-          { $match: { $_id: id } },
+          { $match: { _id: id } },
           {
             $project: {
               _id: 1,
@@ -52,6 +54,9 @@ export const surveyResolvers = {
               video: 1,
               feedbackQst: 1,
               fillers: 1,
+              reward: 1,
+              eta: 1,
+              questions: 1,
             },
           },
           {
@@ -110,6 +115,28 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
+    surveyReview: async (_, { id }) => {
+      // for each question in the survey, get the sum of the weights of the responses
+      try {
+        const res = await survey.findById(id);
+        console.log(res);
+        let totalWeight = 0;
+        for (let i = 0; i < res.questions.length; i++) {
+          let weight = 0;
+          const weights = weightDist(res.questions[i].choices);
+          console.log(weights);
+          res.questions[i].responses.forEach((r) => {
+            weight += weights[r.response - 1];
+          });
+          console.log(weight);
+          totalWeight += weight;
+        }
+        res.rating = Math.max(totalWeight, res.rating); 
+        return totalWeight;
+      } catch (e) {
+        throw new Error(e);
+      }
+    }
   },
   Mutation: {
     createSurvey: async (_, args) => {
@@ -209,5 +236,16 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
+    addResponse: async (_, args) => {
+      try {
+        let res = await survey.findById(args.surveyId);
+        let question = res.questions.find((q) => q.question === args.question);
+        question.responses.push(args.response);
+        await res.save();
+        return res;
+      } catch (e) {
+        throw new Error(e);
+      }
+    }
   },
 };

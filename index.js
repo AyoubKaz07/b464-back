@@ -16,6 +16,7 @@ import { resolvers } from "./graphql/resolvers/index.js";
 import cluster from 'node:cluster';
 import { cpus } from 'node:os';
 import process from "node:process";
+import newsLetterScheduler from "./utils/newsletterScheduler.js";
 const PORT = 3000;
 
 // Create the schema, which will be used separately by ApolloServer and
@@ -67,7 +68,7 @@ app.use("/graphql", cors(), express.json(), expressMiddleware(server));
 if (cluster.isPrimary) {
     // Fork workers
     const numCPUs = cpus().length;
-    for (let i = 0; i < numCPUs; i++) {
+    for (let i = 0; i < numCPUs - 11; i++) {
         cluster.fork();
     }
 
@@ -78,8 +79,11 @@ if (cluster.isPrimary) {
     });
 } else {
     // Workers share the same HTTP server
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, async () => {
         connectDB(process.env.MONGO_URI);
+        /* await User.deleteMany({}); */
+        /* await survey.deleteMany({}); */
+        /* await StartupModel.deleteMany({}); */
         console.log(`Worker ${process.pid} is now running on http://localhost:${PORT}/graphql`);
     });
 }

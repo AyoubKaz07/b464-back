@@ -67,7 +67,8 @@ const surveySchema = mongoose.Schema(
           rating : Number,
         },
       ],
-    }
+    },
+    rating: Number,
   },
   {
     timestamps: true,
