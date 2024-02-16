@@ -51,44 +51,46 @@ export const surveyGQLSchema = gql`
     choices: [String]
   }
 
-  input surveyInput {
-    questions: [questionInput]
-    startup: ID
-    video: String
-    feedbacksQst: String
-  }
-  input surveyInputUpdate {
-    questions: [questionInput]
-    startup: ID
-    video: String
-    feedbacksQst: String
-  }
-  type feedbackAnswer {
-    user: String
-    feedback: String
-    rating: Int
-  }
-  type feedbacks {
-    question: String
-    answers: [feedbackAnswer]
-  }
-  type Survey {
-    _id: ID
-    questions: [question]
-    reward: Float
-    fillers: [User]
-    startup: Startup
-    video: String
-    feedbacks: feedbacks
-    createdAt: Date
-    eta: Int
-  }
+    input surveyInput {
+        questions: [questionInput]
+        startup: ID
+        video: String
+        feedbacksQst : String
+    }
+    input surveyInputUpdate {
+        questions: [questionInput]
+        startup: ID
+        video: String
+        feedbacksQst : String
+    }
+    type feedbackAnswer {
+        user : String
+        feedback : String
+        rating : Int
+    }
+    type feedbacks {
+        question : String
+        answers : [feedbackAnswer]
+    }
+    type Survey {
+        _id: ID
+        questions: [question],
+        reward: Float
+        fillers: [User]
+        startup: Startup
+        video: String
+        feedbacks: feedbacks
+        createdAt: Date
+        eta : Int
+        rating : Int
+    }
 
-  type Query {
-    surveys: [Survey]
-    survey(id: String): Survey
-    surveysByStartup(startup: String): [Survey]
-  }
+    type Query {
+        surveys: [Survey]
+        survey(id: String): Survey
+        surveysByStartup(startup: String): [Survey]
+        surveyReview(id: ID!): Int
+    }
 
   type Mutation {
     createSurvey(survey: surveyInput): Survey

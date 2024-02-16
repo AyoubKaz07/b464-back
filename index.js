@@ -16,7 +16,8 @@ import { resolvers } from "./graphql/resolvers/index.js";
 import cluster from "node:cluster";
 import { cpus } from "node:os";
 import process from "node:process";
-const PORT = 3001;
+import newsLetterScheduler from "./utils/newsletterScheduler.js";
+const PORT = 3000;
 
 // Create the schema, which will be used separately by ApolloServer and
 // the WebSocket server.
