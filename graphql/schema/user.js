@@ -1,42 +1,58 @@
 import { gql } from "apollo-server"
 
+import { GraphQLScalarType, Kind } from "graphql"
+
+const dateScalar = new GraphQLScalarType({
+    name: 'Date',
+    description: 'Date custom scalar type',
+    serialize(value) {
+        return value.getTime(); // Convert outgoing Date to integer for JSON
+    },
+    parseValue(value) {
+        return new Date(value); // Convert incoming integer to Date
+    },
+    parseLiteral(ast) {
+        if (ast.kind === Kind.INT) {
+            return new Date(parseInt(ast.value, 10)); // Convert hard-coded AST string to integer and then to Date
+        }
+        return null; // Invalid hard-coded value (not an integer)
+    },
+});
+
 export const userGQLSchema = gql`
+    input userInput {
+        name: String
+        email: String
+        wallet: Int
+        phone: String
+        pfp: String
+        password: String
+    }
+
     type User {
         id: String!
-        username: String!
-        email: String!
-    }
-
-    type Product {
-        id: String!
         name: String!
-        price: Float!
-    }
-
-    type Query {
-        users: usersInfoResponse!
-        """
-        Get a user by their unique ID.
-        """
-        user(id: String!): User!
-    }
-
-    type usersInfoResponse {
-        success: Boolean!
-        total: Int!
-        users: [User!]!
-    }
-
-    type Mutation {
-        regUser(username: String!, email: String!, password: String!): User!
-        loginUser(email: String!, password: String!): User!
-        updateUser(id: String!, username: String, email: String, password: String): User!
-        deleteUser(id: String!): deleteResponse!
+        email: String!
+        wallet: Int!
+        phone: String!
+        pfp: String!
     }
 
     type deleteResponse {
-        success: Boolean!
+        status: Boolean!
         message: String!
-        id: String!
     }
+    
+    type Query {
+        users: [User!]!
+        user(id: String!): User!
+    }
+
+    type Mutation {
+        regUser(user: userInput): User!
+        loginUser(email: String!, password: String!): User!
+        updateUser(user: userInput): User!
+        deleteUser(id: String!): deleteResponse!
+    }
+
 `

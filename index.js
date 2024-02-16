@@ -12,12 +12,13 @@ import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { expressMiddleware } from "@apollo/server/express4";
 import { mergedGQLSchema } from "./graphql/schema/index.js";
-// import { resolvers } from "./graphql/resolvers/index.js";
+import { resolvers } from "./graphql/resolvers/index.js";
 
 // Create the schema, which will be used separately by ApolloServer and
 // the WebSocket server.
 const schema = makeExecutableSchema({
     typeDefs: mergedGQLSchema,
+    resolvers,
 });
 
 // Create an Express app and HTTP server; we will attach both the WebSocket
