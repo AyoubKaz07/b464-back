@@ -13,6 +13,7 @@ const startupSchema = mongoose.Schema({
   password: String,
   shortDesc: String,
   desc: String,
+  whyUs: [{title: String, desc: String}],
   dateOfCreation: Date,
   email: String,
   phone: String,
@@ -24,13 +25,13 @@ const startupSchema = mongoose.Schema({
     instagram: String,
   },
   website: String,
-  logo: String,
+  logo: {type :String, default : "https://www.pngitem.com/pimgs/m/146-1468479_my-profile-icon-blank-profile-picture-circle-hd.png"},
   founders: [{
     type: String,
     ref: "User"
   }],
   monitized: Boolean,
-  video : {type : String, required: false},
+  video : {type : String, required: false, default : "https://www.youtube.com/watch?v=dQw4w9WgXcQ"},
 },
 {
   timestamps: true,
