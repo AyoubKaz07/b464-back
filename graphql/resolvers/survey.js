@@ -30,6 +30,18 @@ export const surveyResolvers = {
               foreignField: "_id",
               as: "startup",
             },
+            $lookup: {
+              from: "users",
+              localField: "startup.founders",
+              foreignField: "_id",
+              as: "startup.founders",
+            },
+            $lookup: {
+              from: "users",
+              localField: "questions.responses.user",
+              foreignField: "_id",
+              as: "questions.responses.user",
+            },
           },
         ]);
         return surveys;
@@ -56,15 +68,27 @@ export const surveyResolvers = {
           {
             $lookup: {
               from: "users",
-              localField: "founders",
+              localField: "fillers",
               foreignField: "_id",
-              as: "founders",
+              as: "fillers",
             },
             $lookup: {
               from: "startups",
               localField: "startup",
               foreignField: "_id",
               as: "startup",
+            },
+            $lookup: {
+              from: "users",
+              localField: "startup.founders",
+              foreignField: "_id",
+              as: "startup.founders",
+            },
+            $lookup: {
+              from: "users",
+              localField: "questions.responses.user",
+              foreignField: "_id",
+              as: "questions.responses.user",
             },
           },
         ]);
@@ -77,7 +101,94 @@ export const surveyResolvers = {
   },
   Mutation: {
     createSurvey: async (_, args) => {
-      return await survey.create(args);
+      try {
+        let newSurvey = new survey({
+          ...args.survey,
+          feedbacks: {
+            question: args.survey.feedbackQst,
+            answers: [
+              {
+                user: "",
+                feedback: "",
+                rating: 0,
+              },
+            ],
+          },
+          reward: args.survey.questions.length * 0.005,
+          eta: args.survey.questions.length,
+        });
+        await newSurvey.save();
+        newSurvey = await survey.aggregate([
+          { $match: { _id: newSurvey._id } },
+          {
+            $project: {
+              _id: 1,
+              questions: 1,
+              createdAt: 1,
+              startup: 1,
+              video: 1,
+              feedbacks: 1,
+              fillers: 1,
+              reward: 1,
+              eta: 1,
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "fillers",
+              foreignField: "_id",
+              as: "fillers",
+            },
+          },
+          {
+            $lookup: {
+              from: "startups",
+              localField: "startup",
+              foreignField: "_id",
+              as: "startup",
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "startup.founders",
+              foreignField: "_id",
+              as: "startup.founders",
+            },
+          },
+            {
+              $unwind: "$questions"
+            },
+            {
+              $lookup: {
+                from: "users",
+                localField: "questions.responses.user",
+                foreignField: "_id",
+                as: "questions.responses.user",
+              },
+            }, 
+            // { 
+            //   $group : {
+            //     _id : "$survey._id",
+            //     questions: {$addToSet : "$"},
+            //     createdAt: 1,
+            //     startup: 1,
+            //     video: 1,
+            //     feedbacks: 1,
+            //     fillers: 1,
+            //     reward: 1,
+            //     eta: 1,
+            //   }
+            // }
+        ]);
+        newSurvey[0].id = newSurvey[0]._id;
+        delete newSurvey[0]._id;
+        console.log(newSurvey );
+        return newSurvey;
+      } catch (e) {
+        throw new Error(e);
+      }
     },
     updateSurvey: async (_, args) => {
       return await survey

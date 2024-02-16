@@ -25,50 +25,56 @@ export const surveyGQLSchema = gql`
     type response {
         id: ID!
         user: User!
-        response: String!
+        response: Int!
         createdAt: Date!
     }
 
     input responseInput {
-        user: userInput
-        response: String!
-        createdAt: Date!
+        user: String!
+        response: Int!
     }
 
     type question {
         id: ID!
-        question: String
-        verification: Boolean
+        question: String!
+        verification: Boolean!
         answer: Int
         responses: [response]
+        choices: [String]!
     }
 
     input questionInput {
-        question: String
-        verification: Boolean
+        question: String!
+        verification: Boolean!
         answer: Int
-        responses: [responseInput]
+        choices: [String]!
     }
 
     input surveyInput {
-        questions: [questionInput],
-        reward: Int
-        fillers: [userInput]
+        questions: [questionInput]!
         startup: ID!
-        video: String
-        feedbackQst: String
+        video: String!
+        feedbacksQst : String!
+    }
+    type feedbackAnswer {
+        user : String
+        feedback : String
         rating : Int
     }
-
+    type feedbacks {
+        question : String!
+        answers : [feedbackAnswer]
+    }
     type Survey {
         id: ID!
         questions: [question],
-        reward: Int
+        reward: Int!
         fillers: [User]
         startup: Startup
         video: String
-        feedbackQst: String
-        rating : Int
+        feedbacks: feedbacks!
+        createdAt: Date!
+        eta : Int
     }
 
     type Query {

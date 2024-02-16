@@ -9,11 +9,11 @@ const responseSchema = mongoose.Schema(
       type: String,
       default: () => uuidv4().replace(/\-/g, ""),
     },
-    userId: {
+    user: {
       type: String,
       ref: "User",
     },
-    response: String,
+    response: Number,
   },
   {
     timestamps: true,
@@ -27,12 +27,11 @@ const questionSchema = mongoose.Schema(
       default: () => uuidv4().replace(/\-/g, ""),
     },
     question: String,
-    types: {
-      enum: ["", "", ""],
-    },
-    verification : {type : Boolean, default : false},
-    answer : Number,
+
+    verification: { type: Boolean, default: false },
+    answer: Number,
     responses: [responseSchema],
+    choices : [String],
   },
   {
     timestamps: true,
@@ -47,20 +46,32 @@ const surveySchema = mongoose.Schema(
     },
     questions: [questionSchema],
     reward: Number,
-    fillers: [{
-      type: String,
-      ref: "User"
-    }],
+    fillers: [
+      {
+        type: String,
+        ref: "User",
+      },
+    ],
     startup: {
       type: String,
       ref: "Startup",
     },
     video: { type: String, required: true },
-    feedbackQst: { type: String, required: true },
+    eta : Number,
+    feedbacks: {
+      question: String,
+      answers: [
+        {
+          user: { type: String, ref: "User" },
+          feedback: String,
+          rating : Number,
+        },
+      ],
+    }
   },
   {
     timestamps: true,
-    collection : "surveys"
+    collection: "surveys",
   }
 );
 
