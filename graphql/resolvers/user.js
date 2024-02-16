@@ -7,11 +7,7 @@ export const userResolvers = {
     users: async () => {
       try {
         const users = await User.find().lean();
-        users.forEach((user) => {
-          user.id = user._id;
-          delete user._id;
-        });
-        console.log(users);
+
         return users;
       } catch (e) {
         throw new Error(e);
@@ -20,9 +16,7 @@ export const userResolvers = {
     user: async (_, { email }) => {
       try {
         const user = (await User.find({ email }).lean())[0];
-        user.id = user._id;
-        delete user._id;
-        console.log(user);
+
         return user;
       } catch (e) {
         throw new Error(e);

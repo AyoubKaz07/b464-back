@@ -30,7 +30,7 @@ const startupSchema = mongoose.Schema({
     ref: "User"
   }],
   monitized: Boolean,
-  video : {type : String, required: true},
+  video : {type : String, required: false},
 },
 {
   timestamps: true,

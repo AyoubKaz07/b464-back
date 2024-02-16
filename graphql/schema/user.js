@@ -22,7 +22,7 @@ const dateScalar = new GraphQLScalarType({
 export const userGQLSchema = gql`
     input userInput {
         name: String
-        email: String!
+        email: String
         wallet: Int
         phone: String
         pfp: String
@@ -30,29 +30,29 @@ export const userGQLSchema = gql`
     }
 
     type User {
-        id: String!
-        name: String!
-        email: String!
-        wallet: Int!
-        phone: String!
+        _id: String
+        name: String
+        email: String
+        wallet: Int
+        phone: String
         pfp: String
     }
 
     type deleteResponse {
-        success: Boolean!
-        message: String!
+        success: Boolean
+        message: String
     } 
     
     type Query {
-        users: [User!]!
-        user(email: String!): User!
+        users: [User]
+        user(email: String): User
     }
 
     type Mutation {
-        regUser(user: userInput!): User!
-        loginUser(email: String!, password: String!): User!
-        updateUser(user: userInput!,id:ID!): User!
-        deleteUser(email: String!): deleteResponse!
+        regUser(user: userInput): User
+        loginUser(email: String, password: String): User
+        updateUser(user: userInput,id:ID): User
+        deleteUser(email: String): deleteResponse
     }
 
 `

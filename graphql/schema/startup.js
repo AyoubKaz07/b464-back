@@ -29,49 +29,42 @@ export const startupGQLSchema =  gql`
         instagram: String
     }
     
-    type Founder {
-        _id: String
-        name: String
-        email: String
-        phone: String
-        joinDate: Date
-        createdAt: Date
-    } 
+
 
     type deleteResponse {
-        success: Boolean!
-        message: String!
+        success: Boolean
+        message: String
     }
     
     type Startup {
         _id: String
-        name: String!
-        password: String!
-        shortDesc: String!
-        desc: String!
-        dateOfCreation: String!
-        email: String!
-        phone: String!
-        address: String!
+        name: String
+        password: String
+        shortDesc: String
+        desc: String
+        dateOfCreation: String
+        email: String
+        phone: String
+        address: String
         socialMedia: SocialMedia
         website: String
-        logo: String!
-        founders: [Founder]!
-        monitized: Boolean!
-        video: String!
+        logo: String
+        founders: [User]
+        monitized: Boolean
+        video: String
     }
     
     type Query {
-        startup(id: String!): Startup
+        startup(id: String): Startup
         startups: [Startup]
     }
     
     type Mutation {
-        createStartup(startup: StartupInput!): Startup
-        updateStartup(startup: StartupInput!,id : ID!): Startup
-        deleteStartup(id: ID!): deleteResponse
-        loginStartup(email: String!, password: String!): Startup
-        logoutStartup(id: ID!): message
+        createStartup(startup: StartupInput): Startup
+        updateStartup(startup: StartupInput,id : ID): Startup
+        deleteStartup(id: ID): deleteResponse
+        loginStartup(email: String, password: String): Startup
+        logoutStartup(id: ID): message
     }
     
     input SocialMediaInput {
@@ -82,24 +75,24 @@ export const startupGQLSchema =  gql`
     }
 
     type message {
-        success: Boolean!
-        message: String!
+        success: Boolean
+        message: String
     }
 
     input StartupInput {
-        name: String!
-        password: String!
-        shortDesc: String!
-        desc: String!
-        email: String!
-        phone: String!
-        address: String!
+        name: String
+        password: String
+        shortDesc: String
+        desc: String
+        email: String
+        phone: String
+        address: String
         socialMedia: SocialMediaInput
         website: String
-        logo: String!
-        founders: [String]!
+        logo: String
+        founders: [String]
         monitized: Boolean
-        video: String!
+        video: String
         dateOfCreation: Date
     }
 `

@@ -13,16 +13,16 @@ export const surveyResolvers = {
               updatedAt: 1,
               startup: 1,
               video: 1,
-              feedbackQst: 1,
+              feedbacks: 1,
               fillers: 1,
             },
           },
           {
             $lookup: {
               from: "users",
-              localField: "founders",
+              localField: "fillers",
               foreignField: "_id",
-              as: "founders",
+              as: "fillers",
             },
             $lookup: {
               from: "startups",
@@ -30,20 +30,9 @@ export const surveyResolvers = {
               foreignField: "_id",
               as: "startup",
             },
-            $lookup: {
-              from: "users",
-              localField: "startup.founders",
-              foreignField: "_id",
-              as: "startup.founders",
-            },
-            $lookup: {
-              from: "users",
-              localField: "questions.responses.user",
-              foreignField: "_id",
-              as: "questions.responses.user",
-            },
           },
         ]);
+        console.log(surveys);
         return surveys;
       } catch (e) {
         throw new Error(e);
@@ -78,18 +67,6 @@ export const surveyResolvers = {
               foreignField: "_id",
               as: "startup",
             },
-            $lookup: {
-              from: "users",
-              localField: "startup.founders",
-              foreignField: "_id",
-              as: "startup.founders",
-            },
-            $lookup: {
-              from: "users",
-              localField: "questions.responses.user",
-              foreignField: "_id",
-              as: "questions.responses.user",
-            },
           },
         ]);
         return surveys[0];
@@ -97,7 +74,42 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    surveysByStartup: async (_, { startup }, context, info) => {},
+    surveysByStartup: async (_, { startup }) => {
+      try {
+        const surveys = await survey.aggregate([
+          { $match: { startup } },
+          {
+            $project: {
+              _id: 1,
+              title: 1,
+              createdAt: 1,
+              updatedAt: 1,
+              startup: 1,
+              video: 1,
+              feedbackQst: 1,
+              fillers: 1,
+            },
+          },
+          {
+            $lookup: {
+              from: "users",
+              localField: "fillers",
+              foreignField: "_id",
+              as: "fillers",
+            },
+            $lookup: {
+              from: "startups",
+              localField: "startup",
+              foreignField: "_id",
+              as: "startup",
+            },
+          },
+        ]);
+        return surveys;
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
   },
   Mutation: {
     createSurvey: async (_, args) => {
@@ -105,7 +117,7 @@ export const surveyResolvers = {
         let newSurvey = new survey({
           ...args.survey,
           feedbacks: {
-            question: args.survey.feedbackQst,
+            question: args.survey.feedbacksQst,
             answers: [
               {
                 user: "",
@@ -133,14 +145,7 @@ export const surveyResolvers = {
               eta: 1,
             },
           },
-          {
-            $lookup: {
-              from: "users",
-              localField: "fillers",
-              foreignField: "_id",
-              as: "fillers",
-            },
-          },
+
           {
             $lookup: {
               from: "startups",
@@ -149,54 +154,60 @@ export const surveyResolvers = {
               as: "startup",
             },
           },
-          {
-            $lookup: {
-              from: "users",
-              localField: "startup.founders",
-              foreignField: "_id",
-              as: "startup.founders",
-            },
-          },
-            {
-              $unwind: "$questions"
-            },
-            {
-              $lookup: {
-                from: "users",
-                localField: "questions.responses.user",
-                foreignField: "_id",
-                as: "questions.responses.user",
-              },
-            }, 
-            // { 
-            //   $group : {
-            //     _id : "$survey._id",
-            //     questions: {$addToSet : "$"},
-            //     createdAt: 1,
-            //     startup: 1,
-            //     video: 1,
-            //     feedbacks: 1,
-            //     fillers: 1,
-            //     reward: 1,
-            //     eta: 1,
-            //   }
-            // }
         ]);
-        newSurvey[0].id = newSurvey[0]._id;
-        delete newSurvey[0]._id;
-        console.log(newSurvey );
-        return newSurvey;
+        console.log(newSurvey);
+        newSurvey[0].startup = newSurvey[0].startup[0];
+
+        return newSurvey[0];
       } catch (e) {
         throw new Error(e);
       }
     },
     updateSurvey: async (_, args) => {
-      return await survey
-        .findByIdAndUpdate(args.id, args, { new: true })
-        .lean();
+      try {
+        let updatedSurvey = await survey
+          .findByIdAndUpdate(args.id, args.survey, { new: true })
+          .lean();
+        updatedSurvey = await survey.aggregate([
+          { $match: { _id: updatedSurvey._id } },
+          {
+            $project: {
+              _id: 1,
+              questions: 1,
+              createdAt: 1,
+              startup: 1,
+              video: 1,
+              feedbacks: 1,
+              fillers: 1,
+              reward: 1,
+              eta: 1,
+            },
+          },
+
+          {
+            $lookup: {
+              from: "startups",
+              localField: "startup",
+              foreignField: "_id",
+              as: "startup",
+            },
+          },
+        ]);
+        return updatedSurvey[0];
+      } catch (e) {
+        throw new Error(e);
+      }
     },
     deleteSurvey: async (_, args) => {
-      return await survey.findByIdAndDelete(args.id).lean();
+      try {
+        await survey.findByIdAndDelete(args.id).lean();
+        return {
+          success: true,
+          message: "Survey deleted successfully",
+        };
+      } catch (e) {
+        throw new Error(e);
+      }
     },
   },
 };

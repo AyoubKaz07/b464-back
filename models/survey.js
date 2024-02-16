@@ -56,7 +56,7 @@ const surveySchema = mongoose.Schema(
       type: String,
       ref: "Startup",
     },
-    video: { type: String, required: true },
+    video: { type: String, required: false },
     eta : Number,
     feedbacks: {
       question: String,
