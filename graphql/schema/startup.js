@@ -37,6 +37,7 @@ export const startupGQLSchema =  gql`
         joinDate: Date
         createdAt: Date
     } 
+
     type deleteResponse {
         success: Boolean!
         message: String!
@@ -63,15 +64,14 @@ export const startupGQLSchema =  gql`
     type Query {
         startup(id: String!): Startup
         startups: [Startup]
-        # Add other queries as needed
     }
     
     type Mutation {
         createStartup(startup: StartupInput!): Startup
-    
         updateStartup(startup: StartupInput!,id : ID!): Startup
-    
         deleteStartup(id: ID!): deleteResponse
+        loginStartup(email: String!, password: String!): Startup
+        logoutStartup(id: ID!): message
     }
     
     input SocialMediaInput {
@@ -80,8 +80,11 @@ export const startupGQLSchema =  gql`
         linkedin: String
         instagram: String
     }
-    
 
+    type message {
+        success: Boolean!
+        message: String!
+    }
 
     input StartupInput {
         name: String!
