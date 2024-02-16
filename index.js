@@ -29,21 +29,17 @@ const schema = makeExecutableSchema({
 const app = express();
 const httpServer = createServer(app);
 
-// Create our WebSocket server using the HTTP server we just set up.
 const wsServer = new WebSocketServer({
     server: httpServer,
     path: "/graphql",
 });
 const serverCleanup = useServer({ schema }, wsServer);
 
-// Set up ApolloServer.
 const server = new ApolloServer({
     schema,
     plugins: [
-        // Proper shutdown for the HTTP server.
         ApolloServerPluginDrainHttpServer({ httpServer }),
 
-        // Proper shutdown for the WebSocket server.
         {
             async serverWillStart() {
                 return {
@@ -65,7 +61,7 @@ app.use("/graphql", cors(), express.json(), expressMiddleware(server));
 if (cluster.isPrimary) {
     // Fork workers
     const numCPUs = cpus().length;
-    for (let i = 0; i < numCPUs - 11; i++) {
+    for (let i = 0; i < numCPUs; i++) {
         cluster.fork();
     }
 
