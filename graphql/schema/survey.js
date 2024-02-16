@@ -56,7 +56,7 @@ export const surveyGQLSchema = gql`
         fillers: [userInput]
         startup: ID!
         video: String
-        feedback: String
+        feedbackQst: String
         rating : Int
     }
 
@@ -67,7 +67,7 @@ export const surveyGQLSchema = gql`
         fillers: [User]
         startup: Startup
         video: String
-        feedback: String
+        feedbackQst: String
         rating : Int
     }
 
