@@ -39,7 +39,6 @@ export const startupResolvers = {
         } = args.startup;
         if (!validateEmail(email)) throw new Error("Invalid email");
         const hashedPass = await bcrypt.hash(password, 10);
-        console.log("hi");
         let newStartup = new startup({
           name: name,
           password: hashedPass,
@@ -92,7 +91,6 @@ export const startupResolvers = {
             },
           },
         ]);
-        console.log(newStartup[0]);
         return newStartup[0];
       } catch (e) {
         throw new Error(e);
