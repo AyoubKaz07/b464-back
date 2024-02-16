@@ -13,6 +13,10 @@ import { useServer } from "graphql-ws/lib/use/ws";
 import { expressMiddleware } from "@apollo/server/express4";
 import { mergedGQLSchema } from "./graphql/schema/index.js";
 import { resolvers } from "./graphql/resolvers/index.js";
+import cluster from 'node:cluster';
+import { cpus } from 'node:os';
+import process from "node:process";
+const PORT = 3000;
 
 // Create the schema, which will be used separately by ApolloServer and
 // the WebSocket server.
@@ -59,9 +63,23 @@ const server = new ApolloServer({
 await server.start();
 app.use("/graphql", cors(), express.json(), expressMiddleware(server));
 
-const PORT = 3000;
-// Now that our HTTP server is fully set up, we can listen to it.
-httpServer.listen(PORT, () => {
-    connectDB(process.env.MONGO_URI);
-    console.log(`Server is now running on http://localhost:${PORT}/graphql`);
-});
+// Only create the server in the master process
+if (cluster.isPrimary) {
+    // Fork workers
+    const numCPUs = cpus().length;
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+
+    // Handle worker exit
+    cluster.on('exit', (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died`);
+        cluster.fork();
+    });
+} else {
+    // Workers share the same HTTP server
+    httpServer.listen(PORT, () => {
+        connectDB(process.env.MONGO_URI);
+        console.log(`Worker ${process.pid} is now running on http://localhost:${PORT}/graphql`);
+    });
+}

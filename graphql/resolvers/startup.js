@@ -147,7 +147,6 @@ export const startupResolvers = {
             },
           },
         ]);
-        console.log(newStartup[0]);
         return newStartup[0];
       } catch (e) {
         throw new Error(e);
