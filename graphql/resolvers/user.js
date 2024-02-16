@@ -1,5 +1,4 @@
 import User from "../../models/user.js";
-import bcrypt from "bcryptjs";
 import validateEmail from "../../utils/validateEmail.js";
 
 //Done
@@ -35,13 +34,12 @@ export const userResolvers = {
       try {
         const { name, email, password, phone } = args.user;
         if (!validateEmail(email)) throw new Error("Invalid email");
-        const validUser = await User.findOne({ $or: [{ email }, { name }] });;
+        const validUser = await User.findOne({ $or: [{ email }, { name }] });
         if (validUser) throw new Error("User already exists");
-        const hashedPassword = await bcrypt.hash(password, 10);
         const user = new User({
           name,
           email,
-          password: hashedPassword,
+          password: password,
           phone,
           wallet: 0,
         });
@@ -55,7 +53,7 @@ export const userResolvers = {
       try {
         const user = await User.findOne({ email });
         if (!user) throw new Error("User not found");
-        const valid = await bcrypt.compare(password, user.password);
+        const valid = await user.comparePassword(password, user.password);
         if (!valid) throw new Error("Invalid password");
         return user;
       } catch (e) {
@@ -72,7 +70,7 @@ export const userResolvers = {
           if (!validateEmail(email)) throw new Error("Invalid email");
           user.email = email;
         }
-        if (password) user.password = await bcrypt.hash(password, 10);
+        if (password) user.password = password;
         if (wallet) user.wallet = wallet;
         await user.save();
         return user;
@@ -84,7 +82,7 @@ export const userResolvers = {
       try {
         const user = await User.deleteOne({ email });
         if (!user) throw new Error("User not found");
-        
+
         return {
           success: true,
           message: "User deleted successfully",
