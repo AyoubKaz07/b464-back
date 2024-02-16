@@ -9,8 +9,8 @@ const startupSchema = mongoose.Schema({
   },
   name: String,
   password: String,
-  shortDescription: String,
-  description: String,
+  shortDesc: String,
+  desc: String,
   dateOfCreation: Date,
   email: String,
   phone: String,
@@ -32,6 +32,7 @@ const startupSchema = mongoose.Schema({
 },
 {
   timestamps: true,
+  conllection : "startups"
 });
 
 const StartupModel = mongoose.model("Startup", startupSchema);

@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema(
     phone: String,
     pfp: String,
   },
-  { timestamps: true }
+  { timestamps: true, collection: "users" }
 );
 
 const User = mongoose.model("User", userSchema);

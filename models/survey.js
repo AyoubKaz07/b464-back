@@ -61,6 +61,7 @@ const surveySchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    collection : "surveys"
   }
 );
 

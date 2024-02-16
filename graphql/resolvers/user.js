@@ -1,41 +1,97 @@
-import User from '../../models/user.js';
+import User from "../../models/user.js";
+import bcrypt from "bcryptjs";
+import validateEmail from "../../utils/validateEmail.js";
 
+//Done
 export const userResolvers = {
-    Query: {
-        users: async () => {
-            const users = await User.find().lean();
-            return users;
-        },
-        user: async (_, { id }) => {
-            const user = await User.findById(id).lean();
-            return user;
-        }
+  Query: {
+    users: async () => {
+      try {
+        const users = await User.find().lean();
+        users.forEach((user) => {
+          user.id = user._id;
+          delete user._id;
+        });
+        console.log(users);
+        return users;
+      } catch (e) {
+        throw new Error(e);
+      }
     },
-    Mutation: {
-        regUser: async (_, { username, email, password }) => {
-            const user = new User({ username, email, password });
-            await user.save();
-            return user;
-        },
-        loginUser: async (_, { email, password }) => {
-            const user = await User.findOne({ email, password })
-            return user;
-        },
-        updateUser: async (_, { id, username, email, password }) => {
-            const user = await User.findById(id);
-            if (username) user.username = username;
-            if (email) user.email = email;
-            if (password) user.password = password;
-            await user.save();
-            return user;
-        },
-        deleteUser: async (_, { id }) => {
-            const user = await User.findById(id);
-            await user.remove();
-            return {
-                id,
-                message: "User deleted successfully"
-            };
+    user: async (_, { email }) => {
+      try {
+        const user = (await User.find({ email }).lean())[0];
+        user.id = user._id;
+        delete user._id;
+        console.log(user);
+        return user;
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+  },
+  Mutation: {
+    regUser: async (_, args) => {
+      try {
+        const { name, email, password, phone } = args.user;
+        if (!validateEmail(email)) throw new Error("Invalid email");
+        const validUser = await User.findOne({ $or: [{ email }, { name }] });;
+        if (validUser) throw new Error("User already exists");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({
+          name,
+          email,
+          password: hashedPassword,
+          phone,
+          wallet: 0,
+        });
+        await user.save();
+        https: return user;
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+    loginUser: async (_, { email, password }) => {
+      try {
+        const user = await User.findOne({ email });
+        if (!user) throw new Error("User not found");
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) throw new Error("Invalid password");
+        return user;
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+    updateUser: async (_, args) => {
+      try {
+        const { name, email, password, wallet } = args.user;
+        const id = args.id;
+        const user = await User.findById(id);
+        if (name) user.name = name;
+        if (email) {
+          if (!validateEmail(email)) throw new Error("Invalid email");
+          user.email = email;
         }
-    }
+        if (password) user.password = await bcrypt.hash(password, 10);
+        if (wallet) user.wallet = wallet;
+        await user.save();
+        return user;
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+    deleteUser: async (_, { email }) => {
+      try {
+        const user = await User.deleteOne({ email });
+        if (!user) throw new Error("User not found");
+        
+        return {
+          success: true,
+          message: "User deleted successfully",
+        };
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+  },
 };

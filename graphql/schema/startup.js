@@ -36,26 +36,28 @@ export const startupGQLSchema =  gql`
         phone: String
         joinDate: Date
         createdAt: Date
+    } 
+    type deleteResponse {
+        success: Boolean!
+        message: String!
     }
     
     type Startup {
         _id: String
-        name: String
-        password: String
-        shortDescription: String
-        description: String
-        dateOfCreation: String
-        email: String
-        phone: String
-        address: String
+        name: String!
+        password: String!
+        shortDesc: String!
+        desc: String!
+        dateOfCreation: String!
+        email: String!
+        phone: String!
+        address: String!
         socialMedia: SocialMedia
         website: String
-        logo: String
-        founders: [Founder]
-        monitized: Boolean
-        video: String
-        createdAt: String
-        updatedAt: String
+        logo: String!
+        founders: [Founder]!
+        monitized: Boolean!
+        video: String!
     }
     
     type Query {
@@ -65,11 +67,11 @@ export const startupGQLSchema =  gql`
     }
     
     type Mutation {
-        createStartup(startup: StartupInput): Startup
+        createStartup(startup: StartupInput!): Startup
     
-        updateStartup(startup: StartupInput): Startup
+        updateStartup(startup: StartupInput!,id : ID!): Startup
     
-        deleteStartup(id: ID!): String
+        deleteStartup(id: ID!): deleteResponse
     }
     
     input SocialMediaInput {
@@ -79,26 +81,22 @@ export const startupGQLSchema =  gql`
         instagram: String
     }
     
-    input FounderInput {
-        name: String
-        email: String
-        phone: String
-        joinDate: Date
-    }
+
 
     input StartupInput {
         name: String!
         password: String!
-        shortDescription: String
-        description: String
-        email: String
-        phone: String
-        address: String
+        shortDesc: String!
+        desc: String!
+        email: String!
+        phone: String!
+        address: String!
         socialMedia: SocialMediaInput
         website: String
-        logo: String
-        founders: [FounderInput]
+        logo: String!
+        founders: [String]!
         monitized: Boolean
         video: String!
+        dateOfCreation: Date
     }
 `
