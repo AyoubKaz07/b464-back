@@ -16,7 +16,7 @@ import { resolvers } from "./graphql/resolvers/index.js";
 import cluster from 'node:cluster';
 import { cpus } from 'node:os';
 import process from "node:process";
-import newsLetterScheduler from "./utils/newsletterScheduler.js";
+import scheduleWeeklyJob from "./utils/newsletterScheduler.js";
 const PORT = 3000;
 
 // Create the schema, which will be used separately by ApolloServer and
@@ -62,6 +62,7 @@ const server = new ApolloServer({
 });
 
 await server.start();
+scheduleWeeklyJob.start();
 app.use("/graphql", cors(), express.json(), expressMiddleware(server));
 
 // Only create the server in the master process
