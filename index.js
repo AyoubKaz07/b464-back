@@ -19,25 +19,21 @@ import process from "node:process";
 import scheduleWeeklyJob from "./utils/newsletterScheduler.js";
 const PORT = 3000;
 
-// Create the schema, which will be used separately by ApolloServer and
-// the WebSocket server.
+
 const schema = makeExecutableSchema({
     typeDefs: mergedGQLSchema,
     resolvers,
 });
 
-// Create an Express app and HTTP server; we will attach both the WebSocket
-// server and the ApolloServer to this HTTP server.
+
 const app = express();
 const httpServer = createServer(app);
 
 // Create our WebSocket server using the HTTP server we just set up.
 const wsServer = new WebSocketServer({
     server: httpServer,
-    // path has to match our graphql endpoint in the client ?
     path: "/graphql",
 });
-// Save the returned server's info so we can shutdown this server later
 const serverCleanup = useServer({ schema }, wsServer);
 
 // Set up ApolloServer.
@@ -82,9 +78,6 @@ if (cluster.isPrimary) {
     // Workers share the same HTTP server
     httpServer.listen(PORT, async () => {
         connectDB(process.env.MONGO_URI);
-        /* await User.deleteMany({}); */
-        /* await survey.deleteMany({}); */
-        /* await StartupModel.deleteMany({}); */
         console.log(`Worker ${process.pid} is now running on http://localhost:${PORT}/graphql`);
     });
 }
