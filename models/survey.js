@@ -56,8 +56,7 @@ const surveySchema = mongoose.Schema(
       ref: "Startup",
     },
     video: { type: String, required: true },
-    feedback: { type: String, required: true },
-    rating : {type : Number, required: true},
+    feedbackQst: { type: String, required: true },
   },
   {
     timestamps: true,
