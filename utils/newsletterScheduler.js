@@ -37,7 +37,7 @@ const sendWeeklyNewsletter = async () => {
 };
 
 const scheduleWeeklyJob = new CronJob(
-	'0 0 * * * *', // run every Sunday at 00:00
+	'0 7 * * * *', // run every Sunday at 07:00
 	() => {
 		console.log('Started weekly newsletter job');
         sendWeeklyNewsletter();
