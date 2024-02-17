@@ -1,58 +1,55 @@
-import { gql } from "apollo-server"
-import { GraphQLScalarType, Kind } from "graphql"
+import { gql } from "apollo-server";
+import { GraphQLScalarType, Kind } from "graphql";
 
 const dateScalar = new GraphQLScalarType({
-    name: 'Date',
-    description: 'Date custom scalar type',
-    serialize(value) {
-        return value.getTime(); // Convert outgoing Date to integer for JSON
-    },
-    parseValue(value) {
-        return new Date(value); // Convert incoming integer to Date
-    },
-    parseLiteral(ast) {
-        if (ast.kind === Kind.INT) {
-            return new Date(parseInt(ast.value, 10)); // Convert hard-coded AST string to integer and then to Date
-        }
-        return null; // Invalid hard-coded value (not an integer)
-    },
+  name: "Date",
+  description: "Date custom scalar type",
+  serialize(value) {
+    return value.getTime(); // Convert outgoing Date to integer for JSON
+  },
+  parseValue(value) {
+    return new Date(value); // Convert incoming integer to Date
+  },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.INT) {
+      return new Date(parseInt(ast.value, 10)); // Convert hard-coded AST string to integer and then to Date
+    }
+    return null; // Invalid hard-coded value (not an integer)
+  },
 });
 
-
-
 export const surveyGQLSchema = gql`
+  type deleteResponse {
+    success: Boolean
+    message: String
+  }
+  type response {
+    _id: ID
+    user: String
+    response: Int
+    createdAt: Date
+  }
 
-    type deleteResponse {
-        success: Boolean
-        message: String
-    }
-    type response {
-        _id: ID
-        user: String
-        response: Int
-        createdAt: Date
-    }
+  input responseInput {
+    user: String
+    response: Int
+  }
 
-    input responseInput {
-        user: String
-        response: Int
-    }
+  type question {
+    _id: ID
+    question: String
+    verification: Boolean
+    answer: Int
+    responses: [response]
+    choices: [String]
+  }
 
-    type question {
-        _id: ID
-        question: String
-        verification: Boolean
-        answer: Int
-        responses: [response]
-        choices: [String]
-    }
-
-    input questionInput {
-        question: String
-        verification: Boolean
-        answer: Int
-        choices: [String]
-    }
+  input questionInput {
+    question: String
+    verification: Boolean
+    answer: Int
+    choices: [String]
+  }
 
     input surveyInput {
         questions: [questionInput]
@@ -95,10 +92,10 @@ export const surveyGQLSchema = gql`
         surveyReview(id: ID!): Int
     }
 
-    type Mutation {
-        createSurvey(survey: surveyInput): Survey
-        updateSurvey(survey: surveyInputUpdate,id : ID): Survey
-        deleteSurvey(id: ID): deleteResponse
-        addResponse(surveyId: ID, question: String, response: responseInput): Survey
-    }
-`
+  type Mutation {
+    createSurvey(survey: surveyInput): Survey
+    updateSurvey(survey: surveyInputUpdate, id: ID): Survey
+    deleteSurvey(id: ID): deleteResponse
+    addResponse(surveyId: ID, question: String, response: responseInput): Survey
+  }
+`;

@@ -1,6 +1,6 @@
 import startup from "../../models/startup.js";
 import validateEmail from "../../utils/validateEmail.js";
-import bcrypt from "bcryptjs";
+import jsonwebtoken from "jsonwebtoken";
 
 export const startupResolvers = {
   Query: {
@@ -23,6 +23,7 @@ export const startupResolvers = {
               monitized: 1,
               video: 1,
               dateOfCreation: 1,
+              whyUs: 1,
             },
           },
           {
@@ -39,10 +40,10 @@ export const startupResolvers = {
         throw new Error(e);
       }
     },
-    startup: async (_, { id }) => {
+    startup: async (_, { email }) => {
       try {
         const startups = await startup.aggregate([
-          { $match: { _id: id } },
+          { $match: { email: email } },
           {
             $project: {
               _id: 1,
@@ -59,6 +60,7 @@ export const startupResolvers = {
               monitized: 1,
               video: 1,
               dateOfCreation: 1,
+              whyUs: 1,
             },
           },
           {
@@ -94,6 +96,7 @@ export const startupResolvers = {
           monitized,
           video,
           dateOfCreation,
+          whyUs,
         } = args.startup;
         const valid = await startup.findOne({ $or: [{ email }, { name }] });
         if (valid) throw new Error("User exists");
@@ -112,6 +115,7 @@ export const startupResolvers = {
           monitized: monitized,
           video: video,
           dateOfCreation: dateOfCreation,
+          whyUs: whyUs,
         });
         await newStartup.save();
         const id = newStartup._id;
@@ -136,6 +140,7 @@ export const startupResolvers = {
               monitized: 1,
               video: 1,
               dateOfCreation: 1,
+              whyUs: 1,
             },
           },
           {
@@ -147,13 +152,22 @@ export const startupResolvers = {
             },
           },
         ]);
-        return newStartup[0];
+        const token = jsonwebtoken.sign(
+          { id: newStartup._id, type: "startup" },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "30d",
+          }
+        );
+        return { startup: newStartup[0], token };
       } catch (e) {
         throw new Error(e);
       }
     },
-    updateStartup: async (_, args) => {
+    updateStartup: async (_, args, { user }) => {
       try {
+        if (user.id != args.id) throw new Error("Unauthorized");
+        console.log(user.id);
         if (args.startup.email) {
           if (!validateEmail(args.startup.email))
             throw new Error("Invalid email");
@@ -165,13 +179,32 @@ export const startupResolvers = {
         throw new Error(e);
       }
     },
-    deleteStartup: async (_, { id }) => {
+    deleteStartup: async (_, { id }, { user }) => {
+      if (user.id != id) throw new Error("Unauthorized");
       try {
         await startup.findByIdAndDelete(id);
         return {
           success: true,
           message: "Startup deleted successfully",
         };
+      } catch (e) {
+        throw new Error(e);
+      }
+    },
+    loginStartup: async (_, { email, password }) => {
+      try {
+        const loggedInStartup = await startup.findOne({ email });
+        if (!loggedInStartup) throw new Error("Startup not found");
+        const valid = await loggedInStartup.comparePassword(password);
+        if (!valid) throw new Error("Invalid password");
+        const token = jsonwebtoken.sign(
+          { id: loggedInStartup._id, type: "startup" },
+          process.env.JWT_SECRET,
+          {
+            expiresIn: "30d",
+          }
+        );
+        return { startup: loggedInStartup, token };
       } catch (e) {
         throw new Error(e);
       }

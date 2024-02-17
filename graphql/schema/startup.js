@@ -35,10 +35,14 @@ export const startupGQLSchema =  gql`
         success: Boolean
         message: String
     }
-    
+    type whyUs {
+        title: String
+        desc: String
+    }
     type Startup {
         _id: String
         name: String
+        whyUs: [whyUs]
         password: String
         shortDesc: String
         desc: String
@@ -55,16 +59,19 @@ export const startupGQLSchema =  gql`
     }
     
     type Query {
-        startup(id: String): Startup
+        startup(email: String): Startup
         startups: [Startup]
+    }
+    type startupAuth {
+        startup: Startup
+        token: String
     }
     
     type Mutation {
-        createStartup(startup: StartupInput): Startup
+        createStartup(startup: StartupInput): startupAuth
         updateStartup(startup: StartupInput,id : ID): Startup
         deleteStartup(id: ID): deleteResponse
-        loginStartup(email: String, password: String): Startup
-        logoutStartup(id: ID): message
+        loginStartup(email: String, password: String): startupAuth
     }
     
     input SocialMediaInput {
@@ -78,7 +85,10 @@ export const startupGQLSchema =  gql`
         success: Boolean
         message: String
     }
-
+    input whyUsInput {
+        title: String
+        desc: String
+    }
     input StartupInput {
         name: String
         password: String
@@ -94,5 +104,6 @@ export const startupGQLSchema =  gql`
         monitized: Boolean
         video: String
         dateOfCreation: Date
+        whyUs: [whyUsInput]
     }
 `

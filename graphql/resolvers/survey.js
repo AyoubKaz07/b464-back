@@ -15,8 +15,10 @@ export const surveyResolvers = {
               startup: 1,
               video: 1,
               feedbacks: 1,
-              fillers: 1,
               questions: 1,
+              fillers: 1,
+              eta: 1,
+              reward: 1,
             },
           },
           {
@@ -34,7 +36,9 @@ export const surveyResolvers = {
             },
           },
         ]);
-        console.log(surveys);
+        for (let survey of surveys) {
+          survey.startup = survey.startup[0];
+        }
         return surveys;
       } catch (e) {
         throw new Error(e);
@@ -54,9 +58,9 @@ export const surveyResolvers = {
               video: 1,
               feedbackQst: 1,
               fillers: 1,
-              reward: 1,
-              eta: 1,
               questions: 1,
+              eta: 1,
+              reward: 1,
             },
           },
           {
@@ -74,6 +78,8 @@ export const surveyResolvers = {
             },
           },
         ]);
+        surveys[0].startup = surveys[0].startup[0];
+        console.log(surveys[0]);
         return surveys[0];
       } catch (e) {
         throw new Error(e);
@@ -93,6 +99,8 @@ export const surveyResolvers = {
               video: 1,
               feedbackQst: 1,
               fillers: 1,
+              eta: 1,
+              reward: 1,
             },
           },
           {
@@ -110,6 +118,7 @@ export const surveyResolvers = {
             },
           },
         ]);
+        survey[0].startup = survey[0].startup[0];
         return surveys;
       } catch (e) {
         throw new Error(e);
@@ -140,8 +149,10 @@ export const surveyResolvers = {
     }
   },
   Mutation: {
-    createSurvey: async (_, args) => {
+    createSurvey: async (_, args, { user }) => {
+      if (user?.type != "startup") throw new Error("Unauthorized");
       try {
+        console.log(args.survey.questions.length);
         let newSurvey = new survey({
           ...args.survey,
           feedbacks: {
@@ -191,7 +202,9 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    updateSurvey: async (_, args) => {
+    updateSurvey: async (_, args, { user }) => {
+      if (user?.type != "startup") throw new Error("Unauthorized");
+
       try {
         let updatedSurvey = await survey
           .findByIdAndUpdate(args.id, args.survey, { new: true })
@@ -226,7 +239,9 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    deleteSurvey: async (_, args) => {
+    deleteSurvey: async (_, args, { user }) => {
+      if (user?.type != "startup") throw new Error("Unauthorized");
+
       try {
         await survey.findByIdAndDelete(args.id).lean();
         return {
@@ -237,9 +252,11 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    addResponse: async (_, args) => {
+    addResponse: async (_, args, {user}) => {
+      if (user?.type != "startup") throw new Error("Unauthorized");
       try {
         let res = await survey.findById(args.surveyId);
+        if (res.startup != user.id) throw new Error("Unauthorized");
         let question = res.questions.find((q) => q.question === args.question);
         question.responses.push(args.response);
         await res.save();
@@ -247,6 +264,6 @@ export const surveyResolvers = {
       } catch (e) {
         throw new Error(e);
       }
-    }
+    },
   },
 };

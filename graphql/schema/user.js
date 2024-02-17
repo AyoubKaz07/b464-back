@@ -47,12 +47,16 @@ export const userGQLSchema = gql`
         users: [User]
         user(email: String): User
     }
+    type userAuth {
+        user: User
+        token: String
+    }
 
     type Mutation {
-        regUser(user: userInput): User
-        loginUser(email: String, password: String): User
+        regUser(user: userInput): userAuth
+        loginUser(email: String, password: String): userAuth
         updateUser(user: userInput,id:ID): User
-        deleteUser(email: String): deleteResponse
+        deleteUser(id: String): deleteResponse
     }
 
 `
