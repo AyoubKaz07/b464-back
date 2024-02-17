@@ -33,16 +33,18 @@ const httpServer = createServer(app);
 
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization;
-  
+
   if (!token) {
-      return next();
+    return next();
+  }
+
+  jsonwebtoken.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) {
+      return res.json({
+        success: false,
+        message: "Failed to authenticate token.",
+      });
     }
-    
-    jsonwebtoken.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.json({ success: false, message: "Failed to authenticate token." });
-        }
-        console.log(token);
 
     req.user = decoded;
     next();
@@ -85,7 +87,7 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: ({ req }) => ({ user: req.user}),
+    context: ({ req }) => ({ user: req.user }),
   })
 );
 

@@ -59,7 +59,7 @@ export const startupGQLSchema =  gql`
     }
     
     type Query {
-        startup(email: String): Startup
+        startup(id: ID): Startup
         startups: [Startup]
     }
     type startupAuth {

@@ -40,10 +40,10 @@ export const startupResolvers = {
         throw new Error(e);
       }
     },
-    startup: async (_, { email }) => {
+    startup: async (_, { id }) => {
       try {
         const startups = await startup.aggregate([
-          { $match: { email: email } },
+          { $match: { _id: id } },
           {
             $project: {
               _id: 1,

@@ -45,7 +45,7 @@ export const userGQLSchema = gql`
     
     type Query {
         users: [User]
-        user(email: String): User
+        user(id: String): User
     }
     type userAuth {
         user: User

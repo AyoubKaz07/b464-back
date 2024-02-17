@@ -2,6 +2,7 @@ import User from "../../models/user.js";
 import validateEmail from "../../utils/validateEmail.js";
 import jsonwebtoken from "jsonwebtoken"
 
+
 //Done
 export const userResolvers = {
   Query: {
@@ -14,9 +15,9 @@ export const userResolvers = {
         throw new Error(e);
       }
     },
-    user: async (_, { email }) => {
+    user: async (_, { id }) => {
       try {
-        const user = (await User.find({ email }).lean())[0];
+        const user = await User.findById(id).lean();
 
         return user;
       } catch (e) {

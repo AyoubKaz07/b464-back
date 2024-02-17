@@ -1,5 +1,17 @@
 import survey from "../../models/survey.js";
 import weightDist from "../../utils/weightDist.js";
+import OpenAI from "openai";
+import dotenv from "dotenv";
+dotenv.config();
+
+async function ask_ai(msg) {
+  const openai = new OpenAI({ apiKey: process.env.API_KEY });
+  const data = await openai.chat.completions.create({
+    messages: [{ role: "user", content: msg }],
+    model: "gpt-3.5-turbo",
+  });
+  return data["choices"][0]["message"]["content"];
+}
 
 export const surveyResolvers = {
   Query: {
@@ -140,12 +152,30 @@ export const surveyResolvers = {
           console.log(weight);
           totalWeight += weight;
         }
-        res.rating = Math.max(totalWeight, res.rating); 
+        res.rating = Math.max(totalWeight, res.rating);
         return totalWeight;
       } catch (e) {
         throw new Error(e);
       }
-    }
+    },
+    askAi: async (_, { idea }) => {
+      const ai_res = await ask_ai(`
+        i want you to rate this startup idea, in less than 100 words. 
+        this startup idea is for the muslim algrian market,
+        consider various factors such as market demand, scalability, competition analysis, financial viability, and socio-cultural factors unique to Algeria. 7
+        if possible provide examples of existing startups with a similar idea  
+        the idea is "${idea}"`);
+      return ai_res;
+    },
+    checkFeedback: async (_, { feedback }) => {
+      const ai_res = await ask_ai(`
+      this is a startup review    
+      i want to check the given message, check if it does not contain inappropriate language or gibberish, the message is "${feedback}"
+      output only 'true' or 'false' nothing more and nothing less
+  `);
+      ai_res = ai_res.toLowerCase();
+      return ai_res == "true" ? true : false;
+    },
   },
   Mutation: {
     createSurvey: async (_, args, { user }) => {
@@ -251,7 +281,7 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    addResponse: async (_, args, {user}) => {
+    addResponse: async (_, args, { user }) => {
       if (user?.type != "startup") throw new Error("Unauthorized");
       try {
         let res = await survey.findById(args.surveyId);

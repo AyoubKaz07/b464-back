@@ -86,6 +86,8 @@ export const surveyGQLSchema = gql`
     }
 
     type Query {
+        askAi(idea : String): String,
+        checkFeedback(feedback : String): Boolean,
         surveys: [Survey]
         survey(id: String): Survey
         surveysByStartup(startup: String): [Survey]
