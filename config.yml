@@ -2,7 +2,7 @@
 
 introspection:
   # URL of the GraphQL API
-  url: 
+  url: https://6db1-105-235-134-149.ngrok-free.app/graphql
 
 # Output directory for the generated documentation
 output: ./docs
@@ -20,4 +20,4 @@ theme:
     secondary: '#2ecc71'
 
 servers:
-  - url: 
+  - url: https://6db1-105-235-134-149.ngrok-free.app/graphql
