@@ -1,6 +1,7 @@
 import startup from "../../models/startup.js";
 import validateEmail from "../../utils/validateEmail.js";
 import jsonwebtoken from "jsonwebtoken";
+import redisClient from "../../config/redis.js";
 
 export const startupResolvers = {
   Query: {
@@ -42,6 +43,9 @@ export const startupResolvers = {
     },
     startup: async (_, { id }) => {
       try {
+        const key = `startup:${id}`;
+        const cache = await redisClient.get(key);
+        if (cache) return JSON.parse(cache);
         const startups = await startup.aggregate([
           { $match: { _id: id } },
           {
@@ -72,6 +76,7 @@ export const startupResolvers = {
             },
           },
         ]);
+        await redisClient.setEx(key, 60*15, JSON.stringify(startups[0]));
         return startups[0];
       } catch (e) {
         throw new Error(e);
@@ -167,14 +172,14 @@ export const startupResolvers = {
     updateStartup: async (_, args, { user }) => {
       try {
         if (user.id != args.id) throw new Error("Unauthorized");
-        console.log(user.id);
         if (args.startup.email) {
           if (!validateEmail(args.startup.email))
             throw new Error("Invalid email");
         }
-        return await startup
-          .findByIdAndUpdate(args.id, args.startup, { new: true })
-          .lean();
+        const key = `startup:${args.id}`;
+        await redisClient.del(key);
+        await startup.findByIdAndUpdate(args.id, args.startup, { new: true }).lean();
+        redisClient.setEx(key, 60*15, JSON.stringify(args.startup));
       } catch (e) {
         throw new Error(e);
       }
@@ -183,6 +188,7 @@ export const startupResolvers = {
       if (user.id != id) throw new Error("Unauthorized");
       try {
         await startup.findByIdAndDelete(id);
+        redisClient.del(`startup:${id}`);
         return {
           success: true,
           message: "Startup deleted successfully",

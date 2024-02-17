@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import jsonwebtoken from "jsonwebtoken";
-import { connectDB } from "./db/connect.js";
+import { connectDB } from "./config/connect.js";
 import express from "express";
 import cors from "cors";
 import { ApolloServer } from "@apollo/server";
@@ -17,6 +17,7 @@ import cluster from "node:cluster";
 import { cpus } from "node:os";
 import process from "node:process";
 import scheduleWeeklyJob from "./utils/newsletterScheduler.js";
+import redisClient from "./config/redis.js";
 const PORT = 3000;
 
 
@@ -31,18 +32,16 @@ const httpServer = createServer(app);
 
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization;
-
+  
   if (!token) {
-    return next();
-  }
-
-  jsonwebtoken.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.json({
-        success: false,
-        message: "Failed to authenticate token.",
-      });
+      return next();
     }
+    
+    jsonwebtoken.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.json({ success: false, message: "Failed to authenticate token." });
+        }
+        console.log(token);
 
     req.user = decoded;
     next();
@@ -81,7 +80,7 @@ app.use(
   cors(),
   express.json(),
   expressMiddleware(server, {
-    context: ({ req }) => ({ user: req.user }),
+    context: ({ req }) => ({ user: req.user}),
   })
 );
 
@@ -100,6 +99,7 @@ if (cluster.isPrimary) {
 } else {
   // Workers share the same HTTP server
   httpServer.listen(PORT, () => {
+    redisClient.connect();
     connectDB(process.env.MONGO_URI);
     console.log(
       `Worker ${process.pid} is now running on http://localhost:${PORT}/graphql`

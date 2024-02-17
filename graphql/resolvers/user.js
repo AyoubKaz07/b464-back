@@ -1,7 +1,7 @@
 import User from "../../models/user.js";
 import validateEmail from "../../utils/validateEmail.js";
 import jsonwebtoken from "jsonwebtoken"
-
+import redisClient from "../../config/redis.js";
 
 //Done
 export const userResolvers = {
@@ -9,7 +9,6 @@ export const userResolvers = {
     users: async (_, args, { user }) => {
       try {
         const users = await User.find().lean();
-
         return users;
       } catch (e) {
         throw new Error(e);
@@ -17,8 +16,11 @@ export const userResolvers = {
     },
     user: async (_, { id }) => {
       try {
-        const user = await User.findById(id).lean();
-
+        const key = `user:${id}`;
+        const cache = await redisClient.get(key);
+        if (cache) return JSON.parse(cache);
+        const user = (await User.find({ _id: id }).lean())[0];
+        await redisClient.setEx(key, 60*15, JSON.stringify(user));
         return user;
       } catch (e) {
         throw new Error(e);
@@ -77,7 +79,10 @@ export const userResolvers = {
         }
         if (password) updatedUser.password = password;
         if (wallet) updatedUser.wallet = wallet;
+        const key = `user:${id}`;
+        await redisClient.del(key);
         await updatedUser.save();
+        await redisClient.setEx(key, 60*15, JSON.stringify(updatedUser));
         return updatedUser;
       } catch (e) {
         throw new Error(e);
@@ -88,7 +93,7 @@ export const userResolvers = {
         if (user?.id != id) throw new Error("not Authorized");
         const deltedUser = await User.deleteOne({ _id: id });
         if (!deltedUser) throw new Error("User not found");
-
+        redisClient.del(`user:${id}`);
         return {
           success: true,
           message: "User deleted successfully",

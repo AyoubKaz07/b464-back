@@ -1,17 +1,6 @@
 import survey from "../../models/survey.js";
 import weightDist from "../../utils/weightDist.js";
-import OpenAI from "openai";
-import dotenv from "dotenv";
-dotenv.config();
-
-async function ask_ai(msg) {
-  const openai = new OpenAI({ apiKey: process.env.API_KEY });
-  const data = await openai.chat.completions.create({
-    messages: [{ role: "user", content: msg }],
-    model: "gpt-3.5-turbo",
-  });
-  return data["choices"][0]["message"]["content"];
-}
+import redisClient from "../../config/redis.js";
 
 export const surveyResolvers = {
   Query: {
@@ -58,6 +47,9 @@ export const surveyResolvers = {
     },
     survey: async (_, { id }) => {
       try {
+        const key = `survey:${id}`;
+        const cache = await redisClient.get(key);
+        if (cache) return JSON.parse(cache);
         const surveys = await survey.aggregate([
           { $match: { _id: id } },
           {
@@ -91,7 +83,9 @@ export const surveyResolvers = {
           },
         ]);
         surveys[0].startup = surveys[0].startup[0];
-        console.log(surveys[0]);
+        if (surveys[0]) {
+          await redisClient.setEx(key, 60*15, JSON.stringify(surveys[0]));
+        }
         return surveys[0];
       } catch (e) {
         throw new Error(e);
@@ -158,31 +152,12 @@ export const surveyResolvers = {
       } catch (e) {
         throw new Error(e);
       }
-    },
-    askAi: async (_, { idea }) => {
-      const ai_res = await ask_ai(`
-        i want you to rate this startup idea, in less than 100 words. 
-        this startup idea is for the muslim algrian market,
-        consider various factors such as market demand, scalability, competition analysis, financial viability, and socio-cultural factors unique to Algeria. 7
-        if possible provide examples of existing startups with a similar idea  
-        the idea is "${idea}"`);
-      return ai_res;
-    },
-    checkFeedback: async (_, { feedback }) => {
-      const ai_res = await ask_ai(`
-      this is a startup review    
-      i want to check the given message, check if it does not contain inappropriate language or gibberish, the message is "${feedback}"
-      output only 'true' or 'false' nothing more and nothing less
-  `);
-      ai_res = ai_res.toLowerCase();
-      return ai_res == "true" ? true : false;
-    },
+    }
   },
   Mutation: {
     createSurvey: async (_, args, { user }) => {
       if (user?.type != "startup") throw new Error("Unauthorized");
       try {
-        console.log(args.survey.questions.length);
         let newSurvey = new survey({
           ...args.survey,
           feedbacks: {
@@ -264,6 +239,9 @@ export const surveyResolvers = {
             },
           },
         ]);
+        const key = `survey:${args.id}`;
+        await redisClient.del(key);
+        redisClient.setEx(key, 60*15, JSON.stringify(updatedSurvey[0]));
         return updatedSurvey[0];
       } catch (e) {
         throw new Error(e);
@@ -282,14 +260,17 @@ export const surveyResolvers = {
         throw new Error(e);
       }
     },
-    addResponse: async (_, args, { user }) => {
+    addResponse: async (_, args, {user}) => {
       if (user?.type != "startup") throw new Error("Unauthorized");
       try {
+        const cache = await redisClient.get(`survey:${args.surveyId}`);
+        if (cache) await redisClient.del(`survey:${args.surveyId}`);
         let res = await survey.findById(args.surveyId);
         if (res.startup != user.id) throw new Error("Unauthorized");
         let question = res.questions.find((q) => q.question === args.question);
         question.responses.push(args.response);
         await res.save();
+        await redisClient.setEx(`survey:${args.surveyId}`, 60*15, JSON.stringify(res));
         return res;
       } catch (e) {
         throw new Error(e);
