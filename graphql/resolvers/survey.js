@@ -152,7 +152,8 @@ export const surveyResolvers = {
           console.log(weight);
           totalWeight += weight;
         }
-        res.rating = Math.max(totalWeight, res.rating);
+        res.rating = Math.max(totalWeight, res.rating); 
+        await res.save();
         return totalWeight;
       } catch (e) {
         throw new Error(e);

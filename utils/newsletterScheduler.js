@@ -1,18 +1,21 @@
-import schedule from 'node-schedule';
 import sendEmail from './sendEmail.js';
 import investor from '../models/investor.js';
 import survey from '../models/survey.js';
+import { CronJob } from 'cron';
 
-const sendWeeklyNewsletter = () => {
+const sendWeeklyNewsletter = async () => {
     // Get all the investors from the database
-    const investors = investor.find().select().lean();
+    const investors = await investor.find({}).select("email").lean();
 
-    const top10List = survey.aggregate([
+    const startdate = new Date(Date.now());
+    const enddate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const top10List = await survey.aggregate([
         {
             $match: {
                 createdAt: {
-                    $gte: Date.now() - 7 * 24 * 60 * 60 * 1000,
-                    $lte: Date.now(),
+                    $gte: enddate,
+                    $lte: startdate
                 },
             },
         },
@@ -23,24 +26,26 @@ const sendWeeklyNewsletter = () => {
         { $unwind: '$startup' },
     ]);
 
-    
     // Send the newsletter to each investor
     investors.forEach((investor) => {
         sendEmail({
             to: investor.email,
             subject: 'Weekly Newsletter Top 10 Promising Startups',
-            body: `Here are the top 10 most promising startups of the week: ${top10List}`,
+            html: `This week's top 10 promising startups are: ${top10List.map((startup) => startup.startup.website).join(', ')}`,
         });
     });
 };
 
-const scheduleWeeklyJob = () => {
-  // Schedule the job to run every Sunday at midnight (0 0 * * 0)
-  const job = schedule.scheduleJob('0 0 * * 0', sendWeeklyNewsletter);
-
-  job.on('run', () => {
-    console.log('Weekly newsletter job ran successfully');
-  });
-};
+const scheduleWeeklyJob = new CronJob(
+	'0 0 * * * *', // run every Sunday at 00:00
+	() => {
+		console.log('Started weekly newsletter job');
+        sendWeeklyNewsletter();
+	}, // onTick
+	() => {
+        console.log('Successfully sent the weekly newsletter');
+    }, // onComplete
+	'UTC+1' // Algeria timezone
+);
 
 export default scheduleWeeklyJob;
