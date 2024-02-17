@@ -8,9 +8,9 @@ export const investorGQLSchema = gql`
         phone: String
     },
     input InvestorInput {
-        name: String
-        email: String
-        phone: String
+        name: String!
+        email: String!
+        phone: String!
     }
     type Mutation {
         createInvestor(investor: InvestorInput): Investor

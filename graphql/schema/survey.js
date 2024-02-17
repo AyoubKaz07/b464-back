@@ -19,62 +19,67 @@ const dateScalar = new GraphQLScalarType({
 });
 
 export const surveyGQLSchema = gql`
-  type deleteResponse {
-    success: Boolean
-    message: String
-  }
-  type response {
-    _id: ID
-    user: String
-    response: Int
-    createdAt: Date
-  }
+    type deleteResponse {
+        success: Boolean
+        message: String
+    }
 
-  input responseInput {
-    user: String
-    response: Int
-  }
+    type response {
+        _id: ID
+        user: String
+        response: Int
+        createdAt: Date
+    }
 
-  type question {
-    _id: ID
-    question: String
-    verification: Boolean
-    answer: Int
-    responses: [response]
-    choices: [String]
-  }
+    input responseInput {
+        user: String
+        response: Int
+    }
 
-  input questionInput {
-    question: String
-    verification: Boolean
-    answer: Int
-    choices: [String]
-  }
+    type question {
+        _id: ID
+        question: String
+        verification: Boolean
+        answer: Int
+        responses: [response]
+        choices: [String]
+    }
+
+    input questionInput {
+        question: String!
+        verification: Boolean
+        answer: Int
+        choices: [String]!
+    }
 
     input surveyInput {
-        questions: [questionInput]
-        startup: ID
+        questions: [questionInput!]!
+        startup: ID!
         video: String
         feedbacksQst : String
     }
+
     input surveyInputUpdate {
         questions: [questionInput]
         startup: ID
         video: String
         feedbacksQst : String
     }
+
     type feedbackAnswer {
         user : String
         feedback : String
         rating : Int
     }
+
     type feedbacks {
         question : String
         answers : [feedbackAnswer]
     }
+    
     type Survey {
         _id: ID
-        questions: [question],
+        questions: [question]
         reward: Float
         fillers: [User]
         startup: Startup
@@ -86,18 +91,18 @@ export const surveyGQLSchema = gql`
     }
 
     type Query {
-        askAi(idea : String): String,
-        checkFeedback(feedback : String): Boolean,
+        askAi(idea : String!): String,
+        checkFeedback(feedback : String!): Boolean,
         surveys: [Survey]
-        survey(id: String): Survey
-        surveysByStartup(startup: String): [Survey]
+        survey(id: String!): Survey
+        surveysByStartup(startup: String!): [Survey]
         surveyReview(id: ID!): Int
     }
 
-  type Mutation {
-    createSurvey(survey: surveyInput): Survey
-    updateSurvey(survey: surveyInputUpdate, id: ID): Survey
-    deleteSurvey(id: ID): deleteResponse
-    addResponse(surveyId: ID, question: String, response: responseInput): Survey
-  }
-`;
+    type Mutation {
+        createSurvey(survey: surveyInput!): Survey
+        updateSurvey(survey: surveyInputUpdate!, id: ID!): Survey
+        deleteSurvey(id: ID!): deleteResponse
+        addResponse(surveyId: ID!, question: String!, response: responseInput!): Survey
+    }
+`

@@ -29,16 +29,16 @@ export const startupGQLSchema =  gql`
         instagram: String
     }
     
-
-
     type deleteResponse {
         success: Boolean
         message: String
     }
+
     type whyUs {
         title: String
         desc: String
     }
+
     type Startup {
         _id: String
         name: String
@@ -59,19 +59,20 @@ export const startupGQLSchema =  gql`
     }
     
     type Query {
-        startup(id: ID): Startup
+        startup(id: ID!): Startup
         startups: [Startup]
     }
+    
     type startupAuth {
         startup: Startup
         token: String
     }
     
     type Mutation {
-        createStartup(startup: StartupInput): startupAuth
-        updateStartup(startup: StartupInput,id : ID): Startup
-        deleteStartup(id: ID): deleteResponse
-        loginStartup(email: String, password: String): startupAuth
+        createStartup(startup: StartupInput!): startupAuth
+        updateStartup(startup: StartupInput!,id : ID!): Startup
+        deleteStartup(id: ID!): deleteResponse
+        loginStartup(email: String!, password: String!): startupAuth
     }
     
     input SocialMediaInput {
@@ -85,25 +86,27 @@ export const startupGQLSchema =  gql`
         success: Boolean
         message: String
     }
+
     input whyUsInput {
-        title: String
-        desc: String
+        title: String!
+        desc: String!
     }
+
     input StartupInput {
-        name: String
-        password: String
-        shortDesc: String
-        desc: String
-        email: String
+        name: String!
+        password: String!
+        shortDesc: String!
+        desc: String!
+        email: String!
         phone: String
         address: String
         socialMedia: SocialMediaInput
         website: String
-        logo: String
+        logo: String!
         founders: [String]
         monitized: Boolean
         video: String
-        dateOfCreation: Date
-        whyUs: [whyUsInput]
+        dateOfCreation: Date!
+        whyUs: [whyUsInput]!
     }
 `
